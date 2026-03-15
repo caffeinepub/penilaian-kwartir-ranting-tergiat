@@ -11,6 +11,8 @@ import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 import Order "mo:core/Order";
 
+
+
 actor {
   include MixinStorage();
 
@@ -129,6 +131,8 @@ actor {
   };
 
   // Canister state
+  let adminPembantu = Set.empty<Principal>();
+  let pendingAdminPembantu = Set.empty<Principal>();
   let records = Map.empty<Principal, KwartirRanting.KwartirRanting>();
   let documents = Map.empty<Text, KwartirRanting.JudgingDocument>();
   let userProfiles = Map.empty<Principal, UserProfile>();
@@ -155,10 +159,83 @@ actor {
     userProfiles.add(caller, profile);
   };
 
+  // Admin Pembantu Management
+
+  // User requests to become admin pembantu
+  public shared ({ caller }) func requestAdminPembantu() : async () {
+    if (caller.isAnonymous()) {
+      Runtime.trap("Unauthorized: Must be logged in");
+    };
+    if (adminPembantu.contains(caller)) {
+      Runtime.trap("Sudah menjadi Admin Pembantu");
+    };
+    if (AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Admin tidak perlu mendaftar");
+    };
+    pendingAdminPembantu.add(caller);
+  };
+
+  // Admin approves a pending request
+  public shared ({ caller }) func approveAdminPembantu(principal : Principal) : async () {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can approve adminPembantu");
+    };
+    pendingAdminPembantu.remove(principal);
+    adminPembantu.add(principal);
+  };
+
+  // Admin rejects a pending request
+  public shared ({ caller }) func rejectAdminPembantu(principal : Principal) : async () {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can reject adminPembantu");
+    };
+    pendingAdminPembantu.remove(principal);
+  };
+
+  // Get list of pending requests (admin only)
+  public query ({ caller }) func getPendingAdminPembantu() : async [Principal] {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can view pending requests");
+    };
+    pendingAdminPembantu.toArray();
+  };
+
+  // Get list of approved admin pembantu (admin only)
+  public query ({ caller }) func getApprovedAdminPembantu() : async [Principal] {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can view admin pembantu list");
+    };
+    adminPembantu.toArray();
+  };
+
+  public shared ({ caller }) func addAdminPembantu(principal : Principal) : async () {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can add adminPembantu");
+    };
+    adminPembantu.add(principal);
+  };
+
+  public shared ({ caller }) func removeAdminPembantu(principal : Principal) : async () {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can remove adminPembantu");
+    };
+    adminPembantu.remove(principal);
+  };
+
+  public query ({ caller }) func isCallerAdminPembantu() : async Bool {
+    adminPembantu.contains(caller);
+  };
+
+  public query ({ caller }) func isCallerPendingAdminPembantu() : async Bool {
+    pendingAdminPembantu.contains(caller);
+  };
+
   // Admin/Reviewer functions
   public query ({ caller }) func getAllSortedByScore() : async [KwartirRanting.KwartirRanting] {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
-      Runtime.trap("Unauthorized: Only admins can view all rankings");
+    let isAdmin = AccessControl.isAdmin(accessControlState, caller);
+    let isPembantu = adminPembantu.contains(caller);
+    if (not (isAdmin or isPembantu)) {
+      Runtime.trap("Unauthorized: Only admins and adminPembantu can view all rankings");
     };
     records.values().toArray().sort(KwartirRanting.compareBySkorTotal);
   };
@@ -166,7 +243,8 @@ actor {
   // Kwartir Ranting Functions
   public query ({ caller }) func getRecord(kwarranId : Principal) : async KwartirRanting.KwartirRanting {
     let isAdmin = AccessControl.isAdmin(accessControlState, caller);
-    if (caller != kwarranId and not isAdmin) {
+    let isPembantu = adminPembantu.contains(caller);
+    if (caller != kwarranId and not (isAdmin or isPembantu)) {
       Runtime.trap("Unauthorized: Can only view your own record or be an admin");
     };
     switch (records.get(kwarranId)) {
@@ -180,7 +258,8 @@ actor {
       Runtime.trap("Unauthorized: Only users can create or update records");
     };
     let isAdmin = AccessControl.isAdmin(accessControlState, caller);
-    if (record.owner != caller and not isAdmin) {
+    let isPembantu = adminPembantu.contains(caller);
+    if (not (isAdmin or isPembantu or record.owner == caller)) {
       Runtime.trap("Akses ditolak: Hanya pemilik record yang dapat memperbarui atau admin");
     };
     records.add(record.owner, record);
@@ -191,7 +270,8 @@ actor {
       Runtime.trap("Unauthorized: Only users can submit records");
     };
     let isAdmin = AccessControl.isAdmin(accessControlState, caller);
-    if (record.owner != caller and not isAdmin) {
+    let isPembantu = adminPembantu.contains(caller);
+    if (not (isAdmin or isPembantu or record.owner == caller)) {
       Runtime.trap("Akses ditolak: Hanya pemilik record yang dapat submit atau admin");
     };
     records.add(record.owner, {
@@ -205,8 +285,7 @@ actor {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can upload documents");
     };
-    let isAdmin = AccessControl.isAdmin(accessControlState, caller);
-    if (not (isAdmin or document.owner == caller)) {
+    if (document.owner != caller) {
       Runtime.trap("Akses ditolak: Can only upload your own documents");
     };
     let existing = documents.get(document.id);
@@ -226,7 +305,8 @@ actor {
     switch (documents.get(documentId)) {
       case (?document) {
         let isAdmin = AccessControl.isAdmin(accessControlState, caller);
-        if (document.owner != caller and not isAdmin) {
+        let isPembantu = adminPembantu.contains(caller);
+        if (not (isAdmin or isPembantu or document.owner == caller)) {
           Runtime.trap("Unauthorized: Can only view your own documents or be an admin");
         };
         document;

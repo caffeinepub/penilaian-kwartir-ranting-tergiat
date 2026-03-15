@@ -8,9 +8,9 @@ import {
   createRouter,
   useNavigate,
 } from "@tanstack/react-router";
-import { LogIn, LogOut, Shield, User } from "lucide-react";
+import { LogIn, LogOut, Shield, User, UserCog } from "lucide-react";
 import { useInternetIdentity } from "./hooks/useInternetIdentity";
-import { useIsAdmin } from "./hooks/useQueries";
+import { useIsAdmin, useIsAdminPembantu } from "./hooks/useQueries";
 import DetailPage from "./pages/DetailPage";
 import FormPage from "./pages/FormPage";
 import HomePage from "./pages/HomePage";
@@ -18,8 +18,9 @@ import HomePage from "./pages/HomePage";
 function AppHeader() {
   const { login, clear, loginStatus, identity } = useInternetIdentity();
   const { data: isAdmin } = useIsAdmin();
+  const { data: isAdminPembantu } = useIsAdminPembantu();
   const navigate = useNavigate();
-  const isLoggedIn = loginStatus === "success";
+  const isLoggedIn = !!identity;
 
   return (
     <header className="scout-header-bg shadow-lg">
@@ -51,6 +52,12 @@ function AppHeader() {
                 <span className="flex items-center gap-1 bg-gold/20 text-gold px-2 py-1 rounded-full">
                   <Shield className="h-3 w-3" />
                   Admin
+                </span>
+              )}
+              {!isAdmin && isAdminPembantu && (
+                <span className="flex items-center gap-1 bg-amber-400/20 text-amber-300 px-2 py-1 rounded-full">
+                  <UserCog className="h-3 w-3" />
+                  Admin Pembantu
                 </span>
               )}
               <span className="flex items-center gap-1">
@@ -130,6 +137,10 @@ const homeRoute = createRoute({
 const formRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/form",
+  validateSearch: (search: Record<string, unknown>) => ({
+    targetOwner:
+      typeof search.targetOwner === "string" ? search.targetOwner : undefined,
+  }),
   component: FormPage,
 });
 const detailRoute = createRoute({

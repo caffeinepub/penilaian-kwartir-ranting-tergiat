@@ -10,6 +10,7 @@ import {
   CheckCircle,
   ChevronLeft,
   FileText,
+  Printer,
   Star,
   Trophy,
   Users,
@@ -386,15 +387,27 @@ export default function DetailPage() {
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
       <div className="mb-6">
-        <button
-          type="button"
-          onClick={() => navigate({ to: "/" })}
-          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground font-body mb-4 transition-colors"
-          data-ocid="detail.link"
-        >
-          <ChevronLeft className="h-4 w-4" />
-          Kembali
-        </button>
+        <div className="flex items-center justify-between mb-4">
+          <button
+            type="button"
+            onClick={() => navigate({ to: "/" })}
+            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground font-body transition-colors"
+            data-ocid="detail.link"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Kembali
+          </button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.print()}
+            className="flex items-center gap-1.5 font-body border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground print:hidden"
+            data-ocid="detail.primary_button"
+          >
+            <Printer className="h-4 w-4" />
+            Cetak PDF
+          </Button>
+        </div>
         <div className="flex items-start justify-between gap-4">
           <div>
             <h1 className="font-display font-bold text-2xl text-foreground">

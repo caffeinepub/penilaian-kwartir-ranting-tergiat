@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "@tanstack/react-router";
+import { Principal } from "@icp-sdk/core/principal";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import {
+  AlertTriangle,
   CheckCircle,
   ChevronLeft,
   ChevronRight,
@@ -15,6 +17,8 @@ import FormStepB from "../components/FormStepB";
 import FormStepC from "../components/FormStepC";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import {
+  useIsAdmin,
+  useIsAdminPembantu,
   useKwartirRanting,
   useSaveKwartirRanting,
   useSubmitKwartirRanting,
@@ -31,10 +35,30 @@ const STEPS = [
 export default function FormPage() {
   const navigate = useNavigate();
   const { identity, loginStatus } = useInternetIdentity();
-  const isLoggedIn = loginStatus === "success";
-  const principal = identity?.getPrincipal() ?? null;
+  const isLoggedIn = !!identity;
+  const callerPrincipal = identity?.getPrincipal() ?? null;
 
-  const { data: existingRecord, isLoading } = useKwartirRanting(principal);
+  const search = useSearch({ from: "/form" });
+  const targetOwnerStr = (search as { targetOwner?: string }).targetOwner;
+
+  const { data: isAdmin } = useIsAdmin();
+  const { data: isAdminPembantu } = useIsAdminPembantu();
+  const isPrivileged = isAdmin || isAdminPembantu;
+
+  // Determine which principal's record we're loading/editing
+  let targetPrincipal: Principal | null = null;
+  if (targetOwnerStr && isPrivileged) {
+    try {
+      targetPrincipal = Principal.fromText(targetOwnerStr);
+    } catch {
+      targetPrincipal = null;
+    }
+  }
+
+  const effectivePrincipal = targetPrincipal ?? callerPrincipal;
+
+  const { data: existingRecord, isLoading } =
+    useKwartirRanting(effectivePrincipal);
   const saveMutation = useSaveKwartirRanting();
   const submitMutation = useSubmitKwartirRanting();
 
@@ -45,11 +69,25 @@ export default function FormPage() {
     if (!isLoading) {
       if (existingRecord) {
         setRecord(existingRecord);
-      } else if (principal) {
-        setRecord(defaultKwartirRanting(principal.toString()));
+      } else if (effectivePrincipal) {
+        setRecord(defaultKwartirRanting(effectivePrincipal.toString()));
       }
     }
-  }, [existingRecord, isLoading, principal]);
+  }, [existingRecord, isLoading, effectivePrincipal]);
+
+  if (
+    loginStatus === "initializing" ||
+    (loginStatus === "idle" && !identity && !callerPrincipal)
+  ) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-16 text-center">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-muted rounded w-3/4 mx-auto" />
+          <div className="h-4 bg-muted rounded w-1/2 mx-auto" />
+        </div>
+      </div>
+    );
+  }
 
   if (!isLoggedIn) {
     return (
@@ -74,6 +112,10 @@ export default function FormPage() {
 
   const handleSave = async () => {
     const scored = { ...record, rekapan: calculateScore(record) };
+    // If filling on behalf of someone else, ensure owner is set correctly
+    if (targetPrincipal) {
+      scored.owner = targetPrincipal;
+    }
     try {
       await saveMutation.mutateAsync(scored);
       toast.success("Data berhasil disimpan sebagai draft");
@@ -86,6 +128,9 @@ export default function FormPage() {
 
   const handleSubmit = async () => {
     const scored = { ...record, rekapan: calculateScore(record) };
+    if (targetPrincipal) {
+      scored.owner = targetPrincipal;
+    }
     try {
       await submitMutation.mutateAsync(scored);
       toast.success("Penilaian berhasil diajukan!");
@@ -112,6 +157,27 @@ export default function FormPage() {
           <ChevronLeft className="h-4 w-4" />
           Kembali ke Beranda
         </button>
+
+        {targetOwnerStr && isPrivileged && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4 flex items-start gap-3 p-3 rounded-xl bg-amber-50 border border-amber-200 dark:bg-amber-950/30 dark:border-amber-800"
+            data-ocid="form.panel"
+          >
+            <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-body font-semibold text-amber-800 dark:text-amber-300">
+                Mode Bantu Isi Form
+              </p>
+              <p className="text-xs font-body text-amber-700 dark:text-amber-400 mt-0.5 break-all">
+                Anda mengisi form atas nama:{" "}
+                <span className="font-mono font-bold">{targetOwnerStr}</span>
+              </p>
+            </div>
+          </motion.div>
+        )}
+
         <h1 className="font-display font-bold text-2xl text-foreground mb-1">
           Formulir Penilaian Kwartir Ranting Tergiat
         </h1>
@@ -120,7 +186,7 @@ export default function FormPage() {
         </p>
       </div>
 
-      <div className="mb-8" data-ocid="form.panel">
+      <div className="mb-8" data-ocid="form.section">
         <div className="flex items-center justify-between relative">
           <div className="absolute inset-x-0 top-5 h-0.5 bg-border z-0" />
           {STEPS.map((s) => (

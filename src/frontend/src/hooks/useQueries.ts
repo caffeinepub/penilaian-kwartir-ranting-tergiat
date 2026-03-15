@@ -15,6 +15,129 @@ export function useIsAdmin() {
   });
 }
 
+export function useIsAdminPembantu() {
+  const { actor, isFetching } = useActor();
+  return useQuery<boolean>({
+    queryKey: ["isAdminPembantu"],
+    queryFn: async () => {
+      if (!actor) return false;
+      return actor.isCallerAdminPembantu();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useIsAdminPembantuPending() {
+  const { actor, isFetching } = useActor();
+  return useQuery<boolean>({
+    queryKey: ["isAdminPembantuPending"],
+    queryFn: async () => {
+      if (!actor) return false;
+      return (actor as any).isCallerPendingAdminPembantu();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useRequestAdminPembantu() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      if (!actor) throw new Error("Actor not ready");
+      await (actor as any).requestAdminPembantu();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["isAdminPembantu"] });
+      qc.invalidateQueries({ queryKey: ["isAdminPembantuPending"] });
+    },
+  });
+}
+
+export function usePendingAdminPembantu() {
+  const { actor, isFetching } = useActor();
+  return useQuery<Principal[]>({
+    queryKey: ["pendingAdminPembantu"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return (actor as any).getPendingAdminPembantu();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useApprovedAdminPembantu() {
+  const { actor, isFetching } = useActor();
+  return useQuery<Principal[]>({
+    queryKey: ["approvedAdminPembantu"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return (actor as any).getApprovedAdminPembantu();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useApproveAdminPembantu() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (principal: Principal) => {
+      if (!actor) throw new Error("Actor not ready");
+      await (actor as any).approveAdminPembantu(principal);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["pendingAdminPembantu"] });
+      qc.invalidateQueries({ queryKey: ["approvedAdminPembantu"] });
+      qc.invalidateQueries({ queryKey: ["isAdminPembantu"] });
+    },
+  });
+}
+
+export function useRejectAdminPembantu() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (principal: Principal) => {
+      if (!actor) throw new Error("Actor not ready");
+      await (actor as any).rejectAdminPembantu(principal);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["pendingAdminPembantu"] });
+      qc.invalidateQueries({ queryKey: ["approvedAdminPembantu"] });
+    },
+  });
+}
+
+export function useAddAdminPembantu() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (principal: Principal) => {
+      if (!actor) throw new Error("Actor not ready");
+      await actor.addAdminPembantu(principal);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["isAdminPembantu"] });
+    },
+  });
+}
+
+export function useRemoveAdminPembantu() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (principal: Principal) => {
+      if (!actor) throw new Error("Actor not ready");
+      await actor.removeAdminPembantu(principal);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["isAdminPembantu"] });
+      qc.invalidateQueries({ queryKey: ["approvedAdminPembantu"] });
+    },
+  });
+}
+
 export function useCallerRole() {
   const { actor, isFetching } = useActor();
   return useQuery<UserRole>({

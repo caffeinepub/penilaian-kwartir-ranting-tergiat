@@ -120,3 +120,31 @@
   color: oklch(0.52 0.04 50);
   border-color: oklch(0.88 0.02 85);
 }
+
+@media print {
+  header,
+  footer,
+  [data-ocid="detail.link"],
+  [data-ocid="nav.button"],
+  [data-ocid="nav.primary_button"],
+  [data-ocid="detail.primary_button"],
+  .print\:hidden {
+    display: none !important;
+  }
+  body {
+    background: white !important;
+  }
+  .shadow-scout,
+  .shadow-lg,
+  .shadow-xs {
+    box-shadow: none !important;
+  }
+  .max-w-3xl {
+    max-width: 100% !important;
+  }
+  .form-section-header {
+    background: oklch(0.32 0.09 155) !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

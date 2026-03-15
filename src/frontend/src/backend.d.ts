@@ -106,6 +106,7 @@ export enum Variant_hakGunaPakai_milikSendiri_tidakPunya {
     tidakPunya = "tidakPunya"
 }
 export interface backendInterface {
+    addAdminPembantu(principal: Principal): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     createOrUpdateKwartirRanting(record: KwartirRanting): Promise<void>;
     getAllSortedByScore(): Promise<Array<KwartirRanting>>;
@@ -115,6 +116,8 @@ export interface backendInterface {
     getRecord(kwarranId: Principal): Promise<KwartirRanting>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
+    isCallerAdminPembantu(): Promise<boolean>;
+    removeAdminPembantu(principal: Principal): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     submitKwartirRanting(record: KwartirRanting): Promise<void>;
     uploadDocument(document: JudgingDocument): Promise<void>;
