@@ -1,3 +1,4 @@
+import { Principal } from "@icp-sdk/core/principal";
 import type {
   JudgingDocument,
   Kegiatan,
@@ -279,7 +280,7 @@ export function defaultKwartirRanting(ownerId: string): KwartirRanting {
   const record: KwartirRanting = {
     id: crypto.randomUUID(),
     status: Status.draft,
-    owner: { toString: () => ownerId } as any,
+    owner: Principal.fromText(ownerId),
     kegiatan,
     profile: {
       namaKwarran: "",

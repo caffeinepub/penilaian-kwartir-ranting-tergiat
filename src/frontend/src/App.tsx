@@ -8,12 +8,13 @@ import {
   createRouter,
   useNavigate,
 } from "@tanstack/react-router";
-import { LogIn, LogOut, Shield, User, UserCog } from "lucide-react";
+import { LogIn, LogOut, Shield, Trophy, User, UserCog } from "lucide-react";
 import { useInternetIdentity } from "./hooks/useInternetIdentity";
 import { useIsAdmin, useIsAdminPembantu } from "./hooks/useQueries";
 import DetailPage from "./pages/DetailPage";
 import FormPage from "./pages/FormPage";
 import HomePage from "./pages/HomePage";
+import RankingPage from "./pages/RankingPage";
 
 function AppHeader() {
   const { login, clear, loginStatus, identity } = useInternetIdentity();
@@ -46,6 +47,17 @@ function AppHeader() {
           </div>
         </button>
         <div className="flex items-center gap-2">
+          {/* Ranking nav link */}
+          <button
+            type="button"
+            onClick={() => navigate({ to: "/ranking" })}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-body font-semibold text-white/90 hover:bg-white/10 transition-colors border border-white/20"
+            data-ocid="nav.link"
+          >
+            <Trophy className="h-3.5 w-3.5 gold-accent" />
+            Papan Peringkat
+          </button>
+
           {isLoggedIn && identity && (
             <div className="hidden md:flex items-center gap-2 text-xs text-white/80 font-body">
               {isAdmin && (
@@ -148,8 +160,18 @@ const detailRoute = createRoute({
   path: "/detail/$ownerId",
   component: DetailPage,
 });
+const rankingRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/ranking",
+  component: RankingPage,
+});
 
-const routeTree = rootRoute.addChildren([homeRoute, formRoute, detailRoute]);
+const routeTree = rootRoute.addChildren([
+  homeRoute,
+  formRoute,
+  detailRoute,
+  rankingRoute,
+]);
 const router = createRouter({ routeTree });
 
 declare module "@tanstack/react-router" {

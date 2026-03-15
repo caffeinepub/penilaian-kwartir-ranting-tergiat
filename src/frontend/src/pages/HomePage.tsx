@@ -797,6 +797,7 @@ export default function HomePage() {
   const { data: isAdmin } = useIsAdmin();
   const { data: isAdminPembantu } = useIsAdminPembantu();
   const { data: isAdminPembantuPending } = useIsAdminPembantuPending();
+  const navigate = useNavigate();
   const isLoggedIn = !!identity;
   const isInitializing = loginStatus === "initializing";
 
@@ -831,9 +832,18 @@ export default function HomePage() {
               <h3 className="font-display font-bold text-xl mb-2">
                 Silakan Masuk
               </h3>
-              <p className="text-muted-foreground font-body text-sm mb-4">
+              <p className="text-muted-foreground font-body text-sm mb-6">
                 Login untuk mengakses formulir penilaian Kwartir Ranting Anda.
               </p>
+              <button
+                type="button"
+                onClick={() => navigate({ to: "/ranking" })}
+                className="inline-flex items-center gap-2 text-sm font-body font-semibold text-primary hover:text-primary/80 underline underline-offset-4 transition-colors"
+                data-ocid="home.link"
+              >
+                <Trophy className="h-4 w-4" />
+                Lihat Papan Peringkat
+              </button>
             </div>
           </div>
         ) : isAdmin ? (
