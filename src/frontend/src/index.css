@@ -1,0 +1,122 @@
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "Playfair Display";
+  src: url("/assets/fonts/PlayfairDisplay.woff2") format("woff2");
+  font-weight: 400 800;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  src: url("/assets/fonts/PlusJakartaSans.woff2") format("woff2");
+  font-weight: 300 700;
+  font-display: swap;
+}
+
+@layer base {
+  :root {
+    --background: 0.97 0.008 85;
+    --foreground: 0.22 0.04 40;
+
+    --card: 0.99 0.004 85;
+    --card-foreground: 0.22 0.04 40;
+
+    --popover: 0.99 0.004 85;
+    --popover-foreground: 0.22 0.04 40;
+
+    --primary: 0.32 0.09 155;
+    --primary-foreground: 0.97 0.01 90;
+
+    --secondary: 0.88 0.02 85;
+    --secondary-foreground: 0.32 0.09 155;
+
+    --muted: 0.92 0.01 85;
+    --muted-foreground: 0.52 0.04 50;
+
+    --accent: 0.72 0.14 75;
+    --accent-foreground: 0.18 0.05 40;
+
+    --destructive: 0.55 0.22 25;
+    --destructive-foreground: 0.97 0.01 90;
+
+    --border: 0.88 0.02 85;
+    --input: 0.88 0.02 85;
+    --ring: 0.32 0.09 155;
+
+    --radius: 0.5rem;
+
+    --chart-1: 0.32 0.09 155;
+    --chart-2: 0.72 0.14 75;
+    --chart-3: 0.45 0.09 50;
+    --chart-4: 0.6 0.12 200;
+    --chart-5: 0.8 0.1 100;
+
+    --sidebar: 0.27 0.08 155;
+    --sidebar-foreground: 0.97 0.01 90;
+    --sidebar-primary: 0.72 0.14 75;
+    --sidebar-primary-foreground: 0.18 0.05 40;
+    --sidebar-accent: 0.2 0.07 155;
+    --sidebar-accent-foreground: 0.97 0.01 90;
+    --sidebar-border: 0.22 0.07 155;
+    --sidebar-ring: 0.72 0.14 75;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Plus Jakarta Sans", sans-serif;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "Playfair Display", serif;
+  }
+}
+
+.scout-header-bg {
+  background: linear-gradient(
+    135deg,
+    oklch(0.27 0.09 155) 0%,
+    oklch(0.32 0.09 155) 50%,
+    oklch(0.25 0.08 145) 100%
+  );
+}
+
+.gold-accent {
+  color: oklch(0.78 0.16 80);
+}
+
+.form-section-header {
+  background: linear-gradient(135deg, oklch(0.32 0.09 155), oklch(0.38 0.1 160));
+  color: oklch(0.97 0.01 90);
+}
+
+.step-active {
+  background: oklch(0.32 0.09 155);
+  color: oklch(0.97 0.01 90);
+  border-color: oklch(0.32 0.09 155);
+}
+
+.step-done {
+  background: oklch(0.72 0.14 75);
+  color: oklch(0.18 0.05 40);
+  border-color: oklch(0.72 0.14 75);
+}
+
+.step-pending {
+  background: oklch(0.92 0.01 85);
+  color: oklch(0.52 0.04 50);
+  border-color: oklch(0.88 0.02 85);
+}
